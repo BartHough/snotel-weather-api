@@ -1,0 +1,7 @@
+{
+  "queryStringParameters": {
+    "snotel_site": "322:CO:SNTL",
+    "days": "30",
+    "element_code": "WDIRV"
+  }
+}
