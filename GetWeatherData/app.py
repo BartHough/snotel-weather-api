@@ -5,16 +5,20 @@ DATE_FORMAT = '%Y-%m-%d'
 url = 'https://www.wcc.nrcs.usda.gov/awdbWebService/services?WSDL'
 client = Client(url)
 
+
 def dates_from_days(num_days):
     end_date = datetime.today().strftime(DATE_FORMAT) + ' 23:59'
-    begin_date = (datetime.today() - timedelta(days=num_days)).strftime(DATE_FORMAT)
+    begin_date = (datetime.today() - timedelta(days=num_days)
+                  ).strftime(DATE_FORMAT)
     return begin_date, end_date
 
+
 def process_response(data):
-    return [obj.dateTime for obj in data[0].values],[int(obj.value) for obj in data[0].values]
-        
+    return [obj.dateTime for obj in data[0].values], [int(obj.value) for obj in data[0].values]
+
+
 def call_api(snotel_site_name, num_days):
-    # element codes: 
+    # element codes:
     # TOBS = AIR TEMPERATURE OBSERVED
     # PREC = PRECIPITATION ACCUMULATION
     # SNWD = SNOW DEPTH
@@ -22,20 +26,18 @@ def call_api(snotel_site_name, num_days):
     # WSPDX = WIND SPEED MAXIMUM
     # WDIRV = WIND DIRECTION AVERAGE
     begin_date, end_date = dates_from_days(num_days)
-    element_codes = ['TOBS', 'PREC', 'SNWD', 'WTEQ','WSPDX', 'WDIRV']
+    element_codes = ['TOBS', 'PREC', 'SNWD', 'WTEQ', 'WSPDX', 'WDIRV']
     results = []
     for index, element in enumerate(element_codes):
         data = {
             'stationTriplets': snotel_site_name,
-            'elementCd':element,
-            'ordinal':1,
-            'beginDate':begin_date,
-            'endDate':end_date
+            'elementCd': element,
+            'ordinal': 1,
+            'beginDate': begin_date,
+            'endDate': end_date
         }
         results.append(process_response(client.service.getHourlyData(**data)))
     return results
-        
-        
 
 
 def lambda_handler(event, context):
@@ -43,6 +45,10 @@ def lambda_handler(event, context):
     return {
         "isBase64Encoded": 'false',
         "statusCode": 200,
-        "headers": {'Access-Control-Allow-Origin':'*'},
-        "body": json.dumps(call_api(event['queryStringParameters']['snotel'],int(event['queryStringParameters']['days'])))
+        "headers": {
+            'Access-Control-Allow-Origin': '*',
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+        },
+        "body": json.dumps(call_api(event['queryStringParameters']['snotel'], int(event['queryStringParameters']['days'])))
     }
